@@ -4,9 +4,10 @@
     agentguard live  -- <server command...>       connect to a running server, scan it
     agentguard baseline -o base.json -- <cmd...>   record a fingerprint baseline
     agentguard diff  -b base.json -- <cmd...>      detect rug-pulls vs a baseline
+    agentguard iam   -p policy.json                report an identity's AWS blast-radius
 
-Exit code is non-zero when a finding at or above --fail-on is present (scan/live)
-or when any change is detected (diff), so each works as a CI gate.
+Exit code is non-zero when a finding at or above --fail-on is present (scan/live/
+iam) or when any change is detected (diff), so each works as a CI gate.
 """
 from __future__ import annotations
 
@@ -101,6 +102,15 @@ def main(argv: list[str] | None = None) -> int:
     diff.add_argument("-b", "--baseline", type=Path, required=True)
     diff.add_argument("server", nargs=argparse.REMAINDER)
 
+    iam = sub.add_parser("iam", help="Analyze IAM blast-radius of an identity's policies")
+    iam.add_argument("-p", "--policy", type=Path, action="append", default=[],
+                     help="A policy document JSON file (repeatable)")
+    iam.add_argument("--role", help="Fetch policies live for this IAM role name (needs boto3)")
+    iam.add_argument("--profile", help="AWS profile to use with --role")
+    iam.add_argument("--json", action="store_true")
+    iam.add_argument("--fail-on", default="high", choices=list(SEVERITY_ORDER))
+    iam.add_argument("--no-color", action="store_true")
+
     args = parser.parse_args(argv)
 
     if args.command == "scan":
@@ -142,7 +152,46 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n{len(changes)} change(s) since baseline.")
             return 1
 
+    if args.command == "iam":
+        return _run_iam(args)
+
     return 2
+
+
+def _run_iam(args) -> int:
+    from .iam import analyze_policies
+
+    policies: list[dict] = []
+    identity = "identity"
+    for path in args.policy:
+        if not path.exists():
+            print(f"error: no such policy file: {path}", file=sys.stderr)
+            return 2
+        policies.append(json.loads(path.read_text(encoding="utf-8")))
+
+    if args.role:
+        try:
+            from .collect import collect_role_policies
+            policies.extend(collect_role_policies(args.role, profile=args.profile))
+            identity = args.role
+        except Exception as exc:  # AWSUnavailable or a boto error
+            print(f"error: could not fetch IAM policies: {exc}", file=sys.stderr)
+            return 2
+
+    if not policies:
+        print("error: pass at least one --policy file or --role", file=sys.stderr)
+        return 2
+
+    report = analyze_policies(identity, policies)
+    if args.json:
+        print(json.dumps([f.__dict__ for f in report.findings], indent=2))
+    else:
+        print(_render_text(report.findings, use_color=not args.no_color and sys.stdout.isatty()))
+        print(f"\nAnalyzed {len(report.allowed_actions)} distinct allowed action(s), "
+              f"{len(report.findings)} finding(s).")
+
+    fail_at = SEVERITY_ORDER[args.fail_on]
+    return 1 if any(SEVERITY_ORDER[f.severity] >= fail_at for f in report.findings) else 0
 
 
 def _server_command(remainder: list[str]) -> list[str]:

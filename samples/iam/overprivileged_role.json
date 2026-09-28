@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:*"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["iam:CreateAccessKey", "iam:PassRole"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": "arn:aws:secretsmanager:us-east-1:111122223333:secret:prod/*"
+    }
+  ]
+}

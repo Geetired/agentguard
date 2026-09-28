@@ -10,20 +10,24 @@ may follow. Because agents often run with real cloud credentials, a single
 poisoned tool can reach production infrastructure.
 
 AgentGuard scans your MCP setup *before* you trust it, flags dangerous tools, and
-(from milestone 3) reports how much damage each one could actually do given the
-AWS credentials in scope. Findings are mapped to the **OWASP MCP Top 10**.
+reports how much damage each one could actually do given the AWS credentials in
+scope (the *blast radius*). Findings are mapped to the **OWASP MCP Top 10**.
 
-> Status: milestone 2 (live scanning + rug-pull detection). AWS IAM blast-radius
-> is next on the [roadmap](#roadmap).
+> Status: milestone 3 (AWS IAM blast-radius). Reporting & benchmark next on the
+> [roadmap](#roadmap).
 
 ## What it detects today
 
-| Rule  | Detects                                             | OWASP  |
-|-------|-----------------------------------------------------|--------|
-| AG001 | Instructional / injection phrasing in descriptions  | MCP-01 |
-| AG002 | Invisible & bidi control characters (hidden text)   | MCP-01 |
-| AG003 | Hardcoded secrets in tool defs or launch config     | MCP-08 |
-| AG004 | MCP servers launched from unpinned packages         | MCP-02 |
+| Rule   | Detects                                             | OWASP  |
+|--------|-----------------------------------------------------|--------|
+| AG001  | Instructional / injection phrasing in descriptions  | MCP-01 |
+| AG002  | Invisible & bidi control characters (hidden text)   | MCP-01 |
+| AG003  | Hardcoded secrets in tool defs or launch config     | MCP-08 |
+| AG004  | MCP servers launched from unpinned packages         | MCP-02 |
+| IAM001 | Effective administrator access (`*` on `*`)         | MCP-06 |
+| IAM002 | Service-wide wildcards (e.g. `s3:*`)                 | MCP-06 |
+| IAM003 | Privilege-escalation permissions (20+ known paths)  | MCP-06 |
+| IAM004 | Sensitive reach (secrets, KMS, destructive actions) | MCP-06 |
 
 ## Install
 
@@ -68,13 +72,33 @@ agentguard diff -b baseline.json -- npx some-mcp-server
 rug-pull breaks CI. Commit `baseline.json` to your repo and it doubles as a
 reviewable record of every tool your agent trusts.
 
+### AWS IAM blast-radius
+
+A poisoned tool is only as dangerous as the credentials the agent runs with.
+`agentguard iam` analyzes the IAM policies of that identity and reports the blast
+radius: effective admin, service-wide wildcards, and 20+ known
+privilege-escalation permissions that let a limited role become admin.
+
+```bash
+# Analyze a policy document you already have
+agentguard iam -p samples/iam/overprivileged_role.json
+
+# Or fetch a role's policies live (read-only; needs boto3 + credentials)
+pip install "agentguard[aws]"
+agentguard iam --role my-agent-role --profile sandbox
+```
+
+Use a **read-only** identity for the live path, ideally the AWS-managed
+`SecurityAudit` policy. AgentGuard only calls `get`/`list` IAM APIs and never
+modifies anything.
+
 ## Why it's different
 
 Several MCP scanners exist (Snyk/Invariant `mcp-scan`, Cisco AI Defense, Akto).
 AgentGuard's focus is on being **more rigorous and evidence-backed**:
 
 1. **Blast-radius linkage** — tie a flagged tool to what its AWS credentials can
-   actually reach, not just what its text says. *(milestone 3)*
+   actually reach, not just what its text says. *(shipped in M3)*
 2. **A published benchmark** — a labeled corpus of malicious vs. benign tool
    definitions, and a table of what each scanner catches and misses. *(milestone 4)*
 3. **Developer-friendly reporting** — OWASP MCP Top 10 mapping and SARIF output
@@ -84,7 +108,7 @@ AgentGuard's focus is on being **more rigorous and evidence-backed**:
 
 - [x] **M1** — Static scanner for MCP configs & tool definitions
 - [x] **M2** — Live connection to running servers + rug-pull fingerprint/diff
-- [ ] **M3** — AWS IAM blast-radius (read-only `SecurityAudit`)
+- [x] **M3** — AWS IAM blast-radius (read-only `SecurityAudit`)
 - [ ] **M4** — LLM second opinion, OWASP mapping, SARIF + HTML reports, benchmark
 - [ ] **M5** — GitHub Action + PyPI release + demo
 
