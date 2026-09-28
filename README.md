@@ -13,8 +13,8 @@ AgentGuard scans your MCP setup *before* you trust it, flags dangerous tools, an
 (from milestone 3) reports how much damage each one could actually do given the
 AWS credentials in scope. Findings are mapped to the **OWASP MCP Top 10**.
 
-> Status: milestone 1 (static scanner). Live scanning and AWS IAM blast-radius
-> are on the [roadmap](#roadmap).
+> Status: milestone 2 (live scanning + rug-pull detection). AWS IAM blast-radius
+> is next on the [roadmap](#roadmap).
 
 ## What it detects today
 
@@ -49,6 +49,25 @@ agentguard scan mcp.json --json --fail-on high
 Exit code is non-zero when a finding at or above `--fail-on` is present, so it
 drops straight into a pre-commit hook or CI job.
 
+### Live scanning & rug-pull detection
+
+A "rug pull" is when a server looks benign while you review it, then quietly
+changes a tool after you've approved it. AgentGuard connects to the running
+server, reads its *live* tools, and can compare them against a saved baseline:
+
+```bash
+# Scan the tools a running server actually advertises
+agentguard live -- npx some-mcp-server
+
+# Record a fingerprint baseline, then later detect drift / rug-pulls
+agentguard baseline -o baseline.json -- npx some-mcp-server
+agentguard diff -b baseline.json -- npx some-mcp-server
+```
+
+`diff` exits non-zero if any tool was added, removed, or silently changed, so a
+rug-pull breaks CI. Commit `baseline.json` to your repo and it doubles as a
+reviewable record of every tool your agent trusts.
+
 ## Why it's different
 
 Several MCP scanners exist (Snyk/Invariant `mcp-scan`, Cisco AI Defense, Akto).
@@ -64,7 +83,7 @@ AgentGuard's focus is on being **more rigorous and evidence-backed**:
 ## Roadmap
 
 - [x] **M1** — Static scanner for MCP configs & tool definitions
-- [ ] **M2** — Live connection to running servers + rug-pull fingerprint/diff
+- [x] **M2** — Live connection to running servers + rug-pull fingerprint/diff
 - [ ] **M3** — AWS IAM blast-radius (read-only `SecurityAudit`)
 - [ ] **M4** — LLM second opinion, OWASP mapping, SARIF + HTML reports, benchmark
 - [ ] **M5** — GitHub Action + PyPI release + demo
