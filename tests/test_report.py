@@ -19,6 +19,16 @@ def test_sarif_is_valid_shape():
     # Each result's rule must be declared in the driver's rule list.
     rule_ids = {r["id"] for r in run["tool"]["driver"]["rules"]}
     assert run["results"][0]["ruleId"] in rule_ids
+    # GitHub code scanning requires a physical location on every result.
+    loc = run["results"][0]["locations"][0]
+    assert loc["physicalLocation"]["artifactLocation"]["uri"]
+
+
+def test_sarif_source_uri_is_used():
+    f = _finding()
+    doc = to_sarif([f], source_uri="mcp.json")
+    uri = doc["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+    assert uri == "mcp.json"
 
 
 def test_sarif_severity_mapping():

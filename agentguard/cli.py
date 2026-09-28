@@ -57,7 +57,7 @@ def _render_text(findings: list[Finding], use_color: bool) -> str:
     return "\n".join(lines).rstrip()
 
 
-def _scan_and_report(tools, args) -> int:
+def _scan_and_report(tools, args, source: str = "mcp-config") -> int:
     findings: list[Finding] = []
     for tool in tools:
         findings.extend(scan_tool(tool))
@@ -71,7 +71,7 @@ def _scan_and_report(tools, args) -> int:
         print(_render_text(findings, use_color=not args.no_color and sys.stdout.isatty()))
         print(f"\nScanned {len(tools)} tool(s), {len(findings)} finding(s).")
 
-    _write_reports(findings, args)
+    _write_reports(findings, args, source)
 
     fail_at = SEVERITY_ORDER[args.fail_on]
     return 1 if any(SEVERITY_ORDER[f.severity] >= fail_at for f in findings) else 0
@@ -87,10 +87,10 @@ def _add_scan_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--html", metavar="PATH", help="Also write an HTML report to PATH")
 
 
-def _write_reports(findings, args) -> None:
+def _write_reports(findings, args, source: str = "mcp-config") -> None:
     if getattr(args, "sarif", None):
         from .report import write_sarif
-        write_sarif(findings, args.sarif)
+        write_sarif(findings, args.sarif, source_uri=source)
         print(f"Wrote SARIF report to {args.sarif}")
     if getattr(args, "html", None):
         from .report import write_html
@@ -137,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.path.exists():
             print(f"error: no such file: {args.path}", file=sys.stderr)
             return 2
-        return _scan_and_report(_collect(args.path), args)
+        return _scan_and_report(_collect(args.path), args, source=str(args.path))
 
     if args.command in ("live", "baseline", "diff"):
         command = _server_command(args.server)
@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
         if args.command == "live":
-            return _scan_and_report(tools, args)
+            return _scan_and_report(tools, args, source=" ".join(command))
 
         if args.command == "baseline":
             Baseline.from_tools(" ".join(command), tools).save(args.out)

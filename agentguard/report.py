@@ -17,8 +17,15 @@ _SARIF_LEVEL = {"critical": "error", "high": "error", "medium": "warning",
                 "low": "note", "info": "note"}
 
 
-def to_sarif(findings: Iterable[Finding], tool_version: str = "0.4.0") -> dict:
-    """Build a SARIF 2.1.0 document from findings."""
+def to_sarif(findings: Iterable[Finding], tool_version: str = "0.4.0",
+             source_uri: str = "mcp-config") -> dict:
+    """Build a SARIF 2.1.0 document from findings.
+
+    ``source_uri`` is the artifact each finding points at. GitHub code scanning
+    requires every result to carry a *physical* location (an artifact URI), so
+    we anchor findings to the scanned file/server, keeping the tool name as a
+    logical location for readability.
+    """
     findings = list(findings)
     # One rule per distinct rule_id, with its most severe title as the name.
     rules: dict[str, dict] = {}
@@ -39,6 +46,10 @@ def to_sarif(findings: Iterable[Finding], tool_version: str = "0.4.0") -> dict:
             "properties": {"severity": f.severity, "tool": f.tool_name,
                            "owasp-mcp": f.owasp, "evidence": f.evidence},
             "locations": [{
+                "physicalLocation": {
+                    "artifactLocation": {"uri": source_uri},
+                    "region": {"startLine": 1},
+                },
                 "logicalLocations": [{"name": f.tool_name, "kind": "resource"}],
             }],
         })
@@ -58,9 +69,9 @@ def to_sarif(findings: Iterable[Finding], tool_version: str = "0.4.0") -> dict:
     }
 
 
-def write_sarif(findings: Iterable[Finding], path: str) -> None:
+def write_sarif(findings: Iterable[Finding], path: str, source_uri: str = "mcp-config") -> None:
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(to_sarif(findings), fh, indent=2)
+        json.dump(to_sarif(findings, source_uri=source_uri), fh, indent=2)
 
 
 _SEV_COLOR = {"critical": "#b71c1c", "high": "#e53935", "medium": "#fb8c00",
