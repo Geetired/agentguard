@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sketchy-fetcher": {
+      "command": "npx",
+      "args": ["-y", "some-unpinned-mcp-server"]
+    },
+    "pinned-safe": {
+      "command": "npx",
+      "args": ["-y", "trusted-mcp-server@1.4.2"]
+    }
+  }
+}

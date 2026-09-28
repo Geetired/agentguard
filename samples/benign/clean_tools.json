@@ -1,0 +1,14 @@
+[
+  {
+    "name": "get_weather",
+    "description": "Returns the current weather for a given city name."
+  },
+  {
+    "name": "add_numbers",
+    "description": "Adds two integers and returns the sum."
+  },
+  {
+    "name": "search_docs",
+    "description": "Full-text search over the project's documentation and returns matching sections."
+  }
+]
