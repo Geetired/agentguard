@@ -13,7 +13,7 @@ AgentGuard scans your MCP setup *before* you trust it, flags dangerous tools, an
 reports how much damage each one could actually do given the AWS credentials in
 scope (the *blast radius*). Findings are mapped to the **OWASP MCP Top 10**.
 
-> Status: milestone 3 (AWS IAM blast-radius). Reporting & benchmark next on the
+> Status: milestone 4 (reporting + benchmark). Packaging & release next on the
 > [roadmap](#roadmap).
 
 ## What it detects today
@@ -92,6 +92,40 @@ Use a **read-only** identity for the live path, ideally the AWS-managed
 `SecurityAudit` policy. AgentGuard only calls `get`/`list` IAM APIs and never
 modifies anything.
 
+### Reports (SARIF + HTML)
+
+Any scan can also emit a SARIF file (which GitHub code scanning ingests, so
+findings show up in the Security tab and on the PR diff) and a self-contained
+HTML report:
+
+```bash
+agentguard scan mcp.json --sarif agentguard.sarif --html report.html
+```
+
+### Benchmark
+
+Detection accuracy is measured, not asserted. `agentguard benchmark` runs the
+detectors over a labeled corpus (`malicious/` should be flagged, `benign/` must
+stay clean) and prints the metrics:
+
+```bash
+agentguard benchmark samples
+```
+
+| Scanner | Detection rate | False-positive rate | Precision |
+|---------|---------------:|--------------------:|----------:|
+| AgentGuard | 100% | 0% | 100% |
+
+The runner takes any scanner callable, so a second tool can be dropped in for a
+head-to-head comparison as the corpus grows.
+
+### Optional LLM second opinion
+
+For borderline findings, an optional LLM triage step judges whether a finding is
+a real attack or benign phrasing. It's a pluggable interface: the default is a
+fast offline heuristic (no API key), and an Anthropic-backed backend is available
+with `pip install "agentguard[llm]"`.
+
 ## Why it's different
 
 Several MCP scanners exist (Snyk/Invariant `mcp-scan`, Cisco AI Defense, Akto).
@@ -100,16 +134,16 @@ AgentGuard's focus is on being **more rigorous and evidence-backed**:
 1. **Blast-radius linkage** — tie a flagged tool to what its AWS credentials can
    actually reach, not just what its text says. *(shipped in M3)*
 2. **A published benchmark** — a labeled corpus of malicious vs. benign tool
-   definitions, and a table of what each scanner catches and misses. *(milestone 4)*
+   definitions, and a table of what each scanner catches and misses. *(shipped in M4)*
 3. **Developer-friendly reporting** — OWASP MCP Top 10 mapping and SARIF output
-   into GitHub's Security tab. *(milestone 4)*
+   into GitHub's Security tab. *(shipped in M4)*
 
 ## Roadmap
 
 - [x] **M1** — Static scanner for MCP configs & tool definitions
 - [x] **M2** — Live connection to running servers + rug-pull fingerprint/diff
 - [x] **M3** — AWS IAM blast-radius (read-only `SecurityAudit`)
-- [ ] **M4** — LLM second opinion, OWASP mapping, SARIF + HTML reports, benchmark
+- [x] **M4** — LLM second opinion, OWASP mapping, SARIF + HTML reports, benchmark
 - [ ] **M5** — GitHub Action + PyPI release + demo
 
 ## The sample corpus

@@ -5,9 +5,11 @@
     agentguard baseline -o base.json -- <cmd...>   record a fingerprint baseline
     agentguard diff  -b base.json -- <cmd...>      detect rug-pulls vs a baseline
     agentguard iam   -p policy.json                report an identity's AWS blast-radius
+    agentguard benchmark <corpus dir>             score detection over a labeled corpus
 
-Exit code is non-zero when a finding at or above --fail-on is present (scan/live/
-iam) or when any change is detected (diff), so each works as a CI gate.
+scan/live also take --sarif PATH and --html PATH to write reports. Exit code is
+non-zero when a finding at or above --fail-on is present (scan/live/iam) or when
+any change is detected (diff), so each works as a CI gate.
 """
 from __future__ import annotations
 
@@ -69,6 +71,8 @@ def _scan_and_report(tools, args) -> int:
         print(_render_text(findings, use_color=not args.no_color and sys.stdout.isatty()))
         print(f"\nScanned {len(tools)} tool(s), {len(findings)} finding(s).")
 
+    _write_reports(findings, args)
+
     fail_at = SEVERITY_ORDER[args.fail_on]
     return 1 if any(SEVERITY_ORDER[f.severity] >= fail_at for f in findings) else 0
 
@@ -79,6 +83,19 @@ def _add_scan_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument("--fail-on", default="high", choices=list(SEVERITY_ORDER),
                    help="Exit non-zero if a finding at/above this severity exists")
     p.add_argument("--no-color", action="store_true")
+    p.add_argument("--sarif", metavar="PATH", help="Also write a SARIF report to PATH")
+    p.add_argument("--html", metavar="PATH", help="Also write an HTML report to PATH")
+
+
+def _write_reports(findings, args) -> None:
+    if getattr(args, "sarif", None):
+        from .report import write_sarif
+        write_sarif(findings, args.sarif)
+        print(f"Wrote SARIF report to {args.sarif}")
+    if getattr(args, "html", None):
+        from .report import write_html
+        write_html(findings, args.html)
+        print(f"Wrote HTML report to {args.html}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -110,6 +127,9 @@ def main(argv: list[str] | None = None) -> int:
     iam.add_argument("--json", action="store_true")
     iam.add_argument("--fail-on", default="high", choices=list(SEVERITY_ORDER))
     iam.add_argument("--no-color", action="store_true")
+
+    bench = sub.add_parser("benchmark", help="Score detection over a labeled corpus")
+    bench.add_argument("corpus", type=Path, help="Dir with malicious/ and benign/ subdirs")
 
     args = parser.parse_args(argv)
 
@@ -154,6 +174,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "iam":
         return _run_iam(args)
+
+    if args.command == "benchmark":
+        from .benchmark import evaluate, to_markdown_table
+        if not args.corpus.is_dir():
+            print(f"error: not a directory: {args.corpus}", file=sys.stderr)
+            return 2
+        metrics = evaluate(args.corpus)
+        print(to_markdown_table([metrics]))
+        print(f"\n{metrics.true_positive}/{metrics.detected} malicious caught, "
+              f"{metrics.false_positive} false positive(s).")
+        return 0
 
     return 2
 
