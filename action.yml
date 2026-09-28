@@ -1,0 +1,51 @@
+name: "AgentGuard MCP security scan"
+description: "Scan MCP servers and AI-agent tool configs for tool poisoning, prompt injection and secrets; upload results to the Security tab."
+author: "Geetikaa Suresh Kumar"
+branding:
+  icon: shield
+  color: red
+
+inputs:
+  path:
+    description: "MCP config or tool-definitions JSON file to scan"
+    required: true
+  fail-on:
+    description: "Fail the job if a finding at or above this severity exists (info|low|medium|high|critical)"
+    required: false
+    default: "high"
+  sarif-file:
+    description: "Where to write the SARIF report"
+    required: false
+    default: "agentguard.sarif"
+  upload-sarif:
+    description: "Upload the SARIF report to the GitHub Security tab"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install AgentGuard
+      shell: bash
+      # Installs the version pinned to this action's ref, so the action is
+      # self-contained and works before AgentGuard is published to PyPI.
+      run: pip install "${{ github.action_path }}"
+
+    - name: Run AgentGuard
+      shell: bash
+      run: |
+        agentguard scan "${{ inputs.path }}" \
+          --no-color \
+          --sarif "${{ inputs.sarif-file }}" \
+          --fail-on "${{ inputs.fail-on }}"
+
+    - name: Upload SARIF to the Security tab
+      if: ${{ always() && inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.sarif-file }}

@@ -1,5 +1,9 @@
 # AgentGuard
 
+[![CI](https://github.com/Geetired/agentguard/actions/workflows/ci.yml/badge.svg)](https://github.com/Geetired/agentguard/actions/workflows/ci.yml)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+
 **A security scanner for AI agents and MCP servers.**
 
 AI coding assistants (Claude Code, Cursor, Copilot) increasingly connect to tools
@@ -13,8 +17,8 @@ AgentGuard scans your MCP setup *before* you trust it, flags dangerous tools, an
 reports how much damage each one could actually do given the AWS credentials in
 scope (the *blast radius*). Findings are mapped to the **OWASP MCP Top 10**.
 
-> Status: milestone 4 (reporting + benchmark). Packaging & release next on the
-> [roadmap](#roadmap).
+> Status: complete (M1–M5). Ships as a CLI, a Python package, and a reusable
+> GitHub Action. See the [write-up](docs/WRITEUP.md).
 
 ## What it detects today
 
@@ -126,6 +130,29 @@ a real attack or benign phrasing. It's a pluggable interface: the default is a
 fast offline heuristic (no API key), and an Anthropic-backed backend is available
 with `pip install "agentguard[llm]"`.
 
+## Use it in your CI
+
+AgentGuard ships as a reusable GitHub Action. Add it to any repository in a few
+lines (full example in [`examples/agentguard-ci.yml`](examples/agentguard-ci.yml)):
+
+```yaml
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Geetired/agentguard@main
+        with:
+          path: .mcp/config.json
+          fail-on: high
+```
+
+The job fails on any high+ finding and uploads results to the repo's Security tab.
+
 ## Why it's different
 
 Several MCP scanners exist (Snyk/Invariant `mcp-scan`, Cisco AI Defense, Akto).
@@ -144,7 +171,7 @@ AgentGuard's focus is on being **more rigorous and evidence-backed**:
 - [x] **M2** — Live connection to running servers + rug-pull fingerprint/diff
 - [x] **M3** — AWS IAM blast-radius (read-only `SecurityAudit`)
 - [x] **M4** — LLM second opinion, OWASP mapping, SARIF + HTML reports, benchmark
-- [ ] **M5** — GitHub Action + PyPI release + demo
+- [x] **M5** — GitHub Action, PyPI packaging, write-up + demo
 
 ## The sample corpus
 
@@ -152,9 +179,15 @@ AgentGuard's focus is on being **more rigorous and evidence-backed**:
 `benign/` must stay clean. It grows into the milestone 4 benchmark. These are
 defensive test fixtures — the same idea as malware samples used to test antivirus.
 
+## Documentation
+
+- [Project write-up](docs/WRITEUP.md) — the problem, the design, and why it's different
+- [Changelog](CHANGELOG.md)
+
 ## Development
 
 ```bash
+pip install -e ".[dev]"
 pytest -q
 ```
 

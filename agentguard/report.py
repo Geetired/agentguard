@@ -17,7 +17,7 @@ _SARIF_LEVEL = {"critical": "error", "high": "error", "medium": "warning",
                 "low": "note", "info": "note"}
 
 
-def to_sarif(findings: Iterable[Finding], tool_version: str = "0.4.0",
+def to_sarif(findings: Iterable[Finding], tool_version: str = "0.5.0",
              source_uri: str = "mcp-config") -> dict:
     """Build a SARIF 2.1.0 document from findings.
 

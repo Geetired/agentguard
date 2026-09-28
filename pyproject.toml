@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentguard"
-version = "0.4.0"
+version = "0.5.0"
 description = "Security scanner for AI agents and MCP servers: tool poisoning, prompt injection and IAM blast-radius."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Geetikaa Suresh Kumar" }]
 keywords = ["mcp", "security", "ai-agents", "prompt-injection", "scanner"]
 classifiers = [
@@ -29,6 +30,9 @@ agentguard = "agentguard.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/Geetired/agentguard"
+Repository = "https://github.com/Geetired/agentguard"
+Changelog = "https://github.com/Geetired/agentguard/blob/main/CHANGELOG.md"
+Issues = "https://github.com/Geetired/agentguard/issues"
 
 [tool.setuptools]
 packages = ["agentguard"]

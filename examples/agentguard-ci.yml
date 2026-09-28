@@ -1,0 +1,19 @@
+# Example: add AgentGuard to your own repository's CI.
+# Copy this into .github/workflows/ and point `path` at your MCP config.
+name: AgentGuard
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+  security-events: write  # lets AgentGuard write to the Security tab
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Geetired/agentguard@main
+        with:
+          path: .mcp/config.json   # your MCP config or tool-definitions file
+          fail-on: high
