@@ -20,6 +20,9 @@
 - Published a **measured detection benchmark** (100% detection / 0% false
   positives on the labeled corpus) with an extensible runner for head-to-head
   comparison against other scanners.
+- Built **cross-tool "toxic flow" analysis** that models each tool's
+  capabilities and flags exfiltration paths (sensitive-data reader chained to a
+  network sink — the "lethal trifecta") that no single-tool scan would catch.
 
 ## Talking points for interviews
 

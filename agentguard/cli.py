@@ -22,6 +22,7 @@ from .detectors import SEVERITY_ORDER, Finding, scan_tool
 from .fingerprint import Baseline
 from .loader import load_config, load_tools_json
 from .mcpclient import MCPClientError, list_server_tools
+from .toxicflow import analyze_toxic_flows
 
 _COLORS = {"critical": "\033[41m", "high": "\033[91m", "medium": "\033[93m",
            "low": "\033[94m", "info": "\033[90m"}
@@ -61,6 +62,8 @@ def _scan_and_report(tools, args, source: str = "mcp-config") -> int:
     findings: list[Finding] = []
     for tool in tools:
         findings.extend(scan_tool(tool))
+    # Cross-tool pass: toxic flows need the whole tool set, not one tool.
+    findings.extend(analyze_toxic_flows(list(tools)))
     threshold = SEVERITY_ORDER[args.min_severity]
     findings = [f for f in findings if SEVERITY_ORDER[f.severity] >= threshold]
     findings.sort(key=lambda f: SEVERITY_ORDER[f.severity], reverse=True)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0
+- AG007: cross-tool "toxic flow" analysis. Tags each tool's capabilities
+  (sensitive-read, network-egress, code-exec) and flags dangerous source -> sink
+  combinations — e.g. a data reader plus a network sink that can be chained to
+  exfiltrate secrets (the "lethal trifecta") — even when no single tool is
+  malicious. Runs over the whole tool set in `scan`/`live`.
+
 ## 0.6.0
 - AG005: unvalidated URL parameters in a tool's input schema (SSRF risk, CWE-918).
 - AG006: unrestricted file-path parameters in a tool's input schema (path traversal, CWE-22).

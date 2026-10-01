@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentguard"
-version = "0.6.0"
+version = "0.7.0"
 description = "Security scanner for AI agents and MCP servers: tool poisoning, prompt injection and IAM blast-radius."
 readme = "README.md"
 requires-python = ">=3.10"

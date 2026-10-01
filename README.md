@@ -30,6 +30,7 @@ scope (the *blast radius*). Findings are mapped to the **OWASP MCP Top 10**.
 | AG004  | MCP servers launched from unpinned packages         | MCP-04 |
 | AG005  | Unvalidated URL parameters (SSRF, CWE-918)          | MCP-05 |
 | AG006  | Unrestricted file-path parameters (traversal, CWE-22)| MCP-05 |
+| AG007  | Toxic flow: a data-reader + a network sink can be chained to exfiltrate | MCP-06 |
 | IAM001 | Effective administrator access (`*` on `*`)         | MCP-02 |
 | IAM002 | Service-wide wildcards (e.g. `s3:*`)                 | MCP-02 |
 | IAM003 | Privilege-escalation permissions (20+ known paths)  | MCP-02 |
@@ -81,6 +82,23 @@ agentguard diff -b baseline.json -- npx some-mcp-server
 `diff` exits non-zero if any tool was added, removed, or silently changed, so a
 rug-pull breaks CI. Commit `baseline.json` to your repo and it doubles as a
 reviewable record of every tool your agent trusts.
+
+### Toxic-flow (cross-tool) analysis
+
+Some risks don't live in any single tool — they emerge from the *combination*.
+A server that offers both a tool that can reach sensitive data and a tool that
+can send data out gives the agent an exfiltration path (the "lethal trifecta"),
+even when neither tool is malicious alone. AG007 tags each tool's capabilities
+(sensitive-read, network-egress, code-exec) and flags dangerous source -> sink
+pairs:
+
+```bash
+agentguard scan samples/flows/exfil_server.json
+# HIGH  get_credentials + send_to_webhook: Toxic flow: data-exfiltration path [MCP-06]
+```
+
+This is cross-tool, so it runs on the whole set a `scan` or `live` command sees,
+on top of the per-tool rules above.
 
 ### AWS IAM blast-radius
 

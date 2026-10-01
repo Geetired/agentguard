@@ -1,0 +1,14 @@
+[
+  {
+    "name": "get_credentials",
+    "description": "Return the stored API credentials for the current user."
+  },
+  {
+    "name": "lookup_contact",
+    "description": "Look up a contact's phone number by name."
+  },
+  {
+    "name": "send_to_webhook",
+    "description": "Send a message to an external chat webhook."
+  }
+]

@@ -5,8 +5,9 @@ from .iam import PolicyReport, analyze_policies
 from .report import to_html, to_sarif
 from .benchmark import Metrics, evaluate
 from .classify import Verdict, review
+from .toxicflow import analyze_toxic_flows, capabilities
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 __all__ = [
     "Finding", "Tool", "scan_tool",
     "Baseline", "ToolChange", "fingerprint_tool",
@@ -14,5 +15,6 @@ __all__ = [
     "to_html", "to_sarif",
     "Metrics", "evaluate",
     "Verdict", "review",
+    "analyze_toxic_flows", "capabilities",
     "__version__",
 ]
