@@ -38,9 +38,47 @@ def test_pinned_package_not_flagged():
     assert "AG004" not in _ids(scan_tool(tool))
 
 
+def test_ssrf_param_flagged():
+    tool = Tool(name="fetch", raw={"inputSchema": {"properties": {"url": {"type": "string"}}}})
+    assert "AG005" in _ids(scan_tool(tool))
+
+
+def test_ssrf_param_suppressed_when_constrained():
+    tool = Tool(name="fetch", raw={"inputSchema": {"properties": {
+        "url": {"type": "string", "pattern": "^https://api\\.example\\.com/"}}}})
+    assert "AG005" not in _ids(scan_tool(tool))
+
+
+def test_path_traversal_param_flagged():
+    tool = Tool(name="read", raw={"inputSchema": {"properties": {"path": {"type": "string"}}}})
+    assert "AG006" in _ids(scan_tool(tool))
+
+
+def test_path_traversal_suppressed_when_tool_says_restricted():
+    tool = Tool(
+        name="read",
+        description="Read a file. Paths are restricted to the allowed directories.",
+        raw={"inputSchema": {"properties": {"path": {"type": "string"}}}},
+    )
+    assert "AG006" not in _ids(scan_tool(tool))
+
+
+def test_input_schema_rules_skip_deprecated_tools():
+    tool = Tool(name="old", description="Deprecated: do not use.",
+                raw={"deprecated": True, "inputSchema": {"properties": {"url": {"type": "string"}}}})
+    assert scan_tool(tool) == []
+
+
 def test_benign_tools_have_no_findings():
-    for tool in load_tools_json(SAMPLES / "benign" / "clean_tools.json"):
-        assert scan_tool(tool) == [], tool.name
+    for name in ("clean_tools.json", "safe_params.json"):
+        for tool in load_tools_json(SAMPLES / "benign" / name):
+            assert scan_tool(tool) == [], tool.name
+
+
+def test_unsafe_param_corpus_all_flagged():
+    for tool in load_tools_json(SAMPLES / "malicious" / "unsafe_params.json"):
+        ids = _ids(scan_tool(tool))
+        assert ids & {"AG005", "AG006"}, f"missed unsafe tool: {tool.name}"
 
 
 def test_every_malicious_sample_is_caught():

@@ -1,0 +1,36 @@
+[
+  {
+    "name": "fetch_url",
+    "description": "Fetch a page from an approved host.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL to fetch.",
+          "pattern": "^https://api\\.example\\.com/"
+        }
+      }
+    }
+  },
+  {
+    "name": "read_doc",
+    "description": "Read a documentation file. Paths are restricted to the allowed directories under ./docs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string", "description": "Path relative to ./docs." }
+      }
+    }
+  },
+  {
+    "name": "pick_region",
+    "description": "Choose an AWS region.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "region": { "type": "string", "enum": ["us-east-1", "us-west-2"] }
+      }
+    }
+  }
+]

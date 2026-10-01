@@ -107,7 +107,7 @@ def analyze_policies(identity: str, policies: list[dict[str, Any]]) -> PolicyRep
                 severity="critical",
                 tool_name=identity,
                 detail="Grants Action '*' on Resource '*': these credentials can do anything in the account.",
-                owasp="MCP-06",
+                owasp="MCP-02",
                 evidence='"Action": "*", "Resource": "*"',
             ))
             break
@@ -122,7 +122,7 @@ def analyze_policies(identity: str, policies: list[dict[str, Any]]) -> PolicyRep
                     severity="high",
                     tool_name=identity,
                     detail=f"Grants every action in {a.split(':')[0]}; far broader than least privilege.",
-                    owasp="MCP-06",
+                    owasp="MCP-02",
                     evidence=a,
                 ))
 
@@ -135,7 +135,7 @@ def analyze_policies(identity: str, policies: list[dict[str, Any]]) -> PolicyRep
                 severity="high",
                 tool_name=identity,
                 detail=f"{why}. A limited role with this can become admin.",
-                owasp="MCP-06",
+                owasp="MCP-02",
                 evidence=action,
             ))
 
@@ -148,7 +148,7 @@ def analyze_policies(identity: str, policies: list[dict[str, Any]]) -> PolicyRep
                 severity="medium",
                 tool_name=identity,
                 detail="High-impact action (secrets, keys, or destructive) reachable by these credentials.",
-                owasp="MCP-06",
+                owasp="MCP-02",
                 evidence=action,
             ))
 

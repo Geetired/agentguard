@@ -5,7 +5,7 @@ from agentguard.report import to_html, to_sarif
 
 def _finding():
     return Finding(rule_id="AG001", title="Injection", severity="high",
-                   tool_name="get_weather", detail="bad", owasp="MCP-01",
+                   tool_name="get_weather", detail="bad", owasp="MCP-03",
                    evidence="ignore previous instructions")
 
 

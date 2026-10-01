@@ -24,14 +24,20 @@ scope (the *blast radius*). Findings are mapped to the **OWASP MCP Top 10**.
 
 | Rule   | Detects                                             | OWASP  |
 |--------|-----------------------------------------------------|--------|
-| AG001  | Instructional / injection phrasing in descriptions  | MCP-01 |
-| AG002  | Invisible & bidi control characters (hidden text)   | MCP-01 |
-| AG003  | Hardcoded secrets in tool defs or launch config     | MCP-08 |
-| AG004  | MCP servers launched from unpinned packages         | MCP-02 |
-| IAM001 | Effective administrator access (`*` on `*`)         | MCP-06 |
-| IAM002 | Service-wide wildcards (e.g. `s3:*`)                 | MCP-06 |
-| IAM003 | Privilege-escalation permissions (20+ known paths)  | MCP-06 |
-| IAM004 | Sensitive reach (secrets, KMS, destructive actions) | MCP-06 |
+| AG001  | Instructional / injection phrasing in descriptions  | MCP-03 |
+| AG002  | Invisible & bidi control characters (hidden text)   | MCP-03 |
+| AG003  | Hardcoded secrets in tool defs or launch config     | MCP-01 |
+| AG004  | MCP servers launched from unpinned packages         | MCP-04 |
+| AG005  | Unvalidated URL parameters (SSRF, CWE-918)          | MCP-05 |
+| AG006  | Unrestricted file-path parameters (traversal, CWE-22)| MCP-05 |
+| IAM001 | Effective administrator access (`*` on `*`)         | MCP-02 |
+| IAM002 | Service-wide wildcards (e.g. `s3:*`)                 | MCP-02 |
+| IAM003 | Privilege-escalation permissions (20+ known paths)  | MCP-02 |
+| IAM004 | Sensitive reach (secrets, KMS, destructive actions) | MCP-02 |
+
+OWASP codes map to the [OWASP MCP Top 10 (2025)](https://owasp.org/projects/mcp-top-10):
+MCP-01 Token Mismanagement & Secret Exposure, MCP-02 Privilege Escalation,
+MCP-03 Tool Poisoning, MCP-04 Supply Chain, MCP-05 Command Injection & Execution.
 
 ## Install
 

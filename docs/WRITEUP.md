@@ -38,12 +38,12 @@ Every finding is mapped to the **OWASP MCP Top 10**.
 
 ```text
 $ agentguard scan poisoned_tools.json
-CRITICAL  deploy: Possible hardcoded secret (AWS access key id) [MCP-08]
-HIGH      get_weather: Instructional phrasing in tool description [MCP-01]
-HIGH      search_docs: Invisible / control characters in tool description [MCP-01]
+CRITICAL  deploy: Possible hardcoded secret (AWS access key id) [MCP-01]
+HIGH      get_weather: Instructional phrasing in tool description [MCP-03]
+HIGH      search_docs: Invisible / control characters in tool description [MCP-03]
 
 $ agentguard iam -p overprivileged_role.json
-HIGH      identity: Privilege-escalation permission: iam:PassRole [MCP-06]
+HIGH      identity: Privilege-escalation permission: iam:PassRole [MCP-02]
 
 $ agentguard benchmark samples
 | Scanner    | Detection rate | False-positive rate | Precision |

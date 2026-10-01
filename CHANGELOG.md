@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+- AG005: unvalidated URL parameters in a tool's input schema (SSRF risk, CWE-918).
+- AG006: unrestricted file-path parameters in a tool's input schema (path traversal, CWE-22).
+  Both read the declared JSON-Schema inputs and suppress findings when the param is
+  constrained (enum/pattern) or the tool documents an allow-list, and skip deprecated tools.
+- Corrected OWASP MCP Top 10 mappings to the official 2025 list: tool poisoning MCP-03,
+  secret exposure MCP-01, supply chain MCP-04, privilege escalation (IAM) MCP-02,
+  input-validation flaws MCP-05.
+
 ## 0.5.0
 - Reusable GitHub Action (`action.yml`) — add AgentGuard to any CI in a few lines.
 - PyPI packaging and a Trusted-Publishing release workflow (publishes on `v*` tags).
